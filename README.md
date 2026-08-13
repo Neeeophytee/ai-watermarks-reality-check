@@ -256,6 +256,8 @@ python3 scripts/live_c2pa_smoke.py \
 ```
 
 The smoke test also creates a temporary tampered derivative and requires it to be rejected.
+Pass `--tampered /path/to/known-tampered.jpg` when a fixture already contains a
+deliberate mutation in content covered by the manifest's hard binding.
 
 ## Scope and safety
 

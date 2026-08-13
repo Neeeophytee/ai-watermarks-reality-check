@@ -38,6 +38,7 @@ transparency_mod = load("t_check_transparency", "skills/check-ai-transparency/sc
 watermark_mod = load("t_detect_watermark", "skills/detect-text-watermark/scripts/detect_text_watermark.py")
 frontdoor_mod = load("t_audit_provenance", "skills/audit-provenance/scripts/audit_provenance.py")
 mcp_server = load("t_mcp_server", "mcp/server.py")
+signed_fixture_mod = load("t_make_signed_fixture", "tests/make_signed_fixture.py")
 
 
 def ensure_fixtures():
@@ -1452,6 +1453,43 @@ class McpSchemaParityTests(unittest.TestCase):
             errors = validate_schema.validate_document(payload, schema)
             self.assertEqual(errors, [], "{0}: {1}".format(name, errors))
             self.assertTrue(payload.get("reason"), name)
+
+
+class GeneratedCertificateProfileTests(unittest.TestCase):
+    """The generated signing credential follows the C2PA X.509 profile."""
+
+    @unittest.skipUnless(shutil.which("openssl"), "openssl is not available")
+    def test_signing_chain_excludes_root_and_uses_required_extensions(self):
+        with tempfile.TemporaryDirectory() as temp:
+            previous_out = signed_fixture_mod.OUT
+            signed_fixture_mod.OUT = pathlib.Path(temp)
+            try:
+                signed_fixture_mod.make_certificates()
+                signing_env = signed_fixture_mod.signing_environment()
+            finally:
+                signed_fixture_mod.OUT = previous_out
+
+            output = pathlib.Path(temp)
+            chain = (output / "chain.pem").read_text(encoding="utf-8")
+            signer = (output / "signer.pem").read_text(encoding="utf-8")
+            root = (output / "ca.pem").read_text(encoding="utf-8")
+            self.assertEqual(chain, signer)
+            self.assertEqual(chain.count("-----BEGIN CERTIFICATE-----"), 1)
+            self.assertNotEqual(chain, root)
+            self.assertTrue(signing_env["C2PA_SIGN_CERT"].startswith(
+                "-----BEGIN CERTIFICATE-----"))
+            self.assertTrue(signing_env["C2PA_PRIVATE_KEY"].startswith(
+                "-----BEGIN PRIVATE KEY-----"))
+
+            details = subprocess.run(
+                ["openssl", "x509", "-in", str(output / "signer.pem"),
+                 "-text", "-noout"],
+                check=True, capture_output=True, text=True).stdout
+            self.assertIn("ecdsa-with-SHA256", details)
+            self.assertIn("X509v3 Authority Key Identifier", details)
+            self.assertIn("X509v3 Subject Key Identifier", details)
+            self.assertIn("E-mail Protection", details)
+            self.assertIn("Digital Signature", details)
 
 
 @unittest.skipUnless(SELF_SIGNED, "no self-signed fixture; run tests/make_signed_fixture.py")

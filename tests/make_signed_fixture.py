@@ -4,7 +4,7 @@
 Produces, into `tests/fixtures/signed/` (gitignored):
 
     ca.pem            our test root
-    chain.pem         signer + root, for c2patool
+    chain.pem         signer certificate for c2patool (root excluded)
     signer_pkcs8.key  signing key (generated here, never committed)
     signed.jpg        a real, cryptographically signed asset
     tampered.jpg      the same asset with one flipped byte
@@ -41,6 +41,8 @@ EXIT_SKIP = 3
 SIGNER_EXT = """basicConstraints=critical,CA:FALSE
 keyUsage=critical,digitalSignature
 extendedKeyUsage=critical,emailProtection
+subjectKeyIdentifier=hash
+authorityKeyIdentifier=keyid,issuer
 """
 
 MANIFEST = {
@@ -49,9 +51,7 @@ MANIFEST = {
         {"name": "ai-watermarks-reality-check fixtures", "version": "0.1.0"}
     ],
     "title": "signed.jpg",
-    "assertions": [
-        {"label": "c2pa.actions.v2", "data": {"actions": [{"action": "c2pa.created"}]}}
-    ],
+    "assertions": [],
 }
 
 
@@ -69,7 +69,8 @@ def make_certificates() -> None:
          "-out", str(OUT / "ca.pem"), "-days", "3650",
          "-subj", "/C=EE/O=AI Watermarks Reality Check/CN=Fixture Test Root CA",
          "-addext", "basicConstraints=critical,CA:TRUE",
-         "-addext", "keyUsage=critical,keyCertSign,cRLSign"], check=True)
+         "-addext", "keyUsage=critical,keyCertSign,cRLSign",
+         "-addext", "subjectKeyIdentifier=hash"], check=True)
 
     run(["openssl", "ecparam", "-name", "prime256v1", "-genkey", "-noout",
          "-out", str(OUT / "signer.key")], check=True)
@@ -79,14 +80,26 @@ def make_certificates() -> None:
     run(["openssl", "x509", "-req", "-in", str(OUT / "signer.csr"),
          "-CA", str(OUT / "ca.pem"), "-CAkey", str(OUT / "ca.key"), "-CAcreateserial",
          "-out", str(OUT / "signer.pem"), "-days", "3650",
-         "-extfile", str(OUT / "ext.cnf")], check=True)
+         "-sha256", "-extfile", str(OUT / "ext.cnf")], check=True)
 
     # c2pa-rs requires PKCS#8; `openssl ecparam` emits SEC1.
     run(["openssl", "pkcs8", "-topk8", "-nocrypt",
          "-in", str(OUT / "signer.key"), "-out", str(OUT / "signer_pkcs8.key")], check=True)
 
-    chain = (OUT / "signer.pem").read_text(encoding="utf-8") + (OUT / "ca.pem").read_text(encoding="utf-8")
+    # C2PA x5chain contains the end-entity certificate and any intermediates.
+    # The root is the separately configured trust anchor and must not be
+    # embedded in the signing chain.
+    chain = (OUT / "signer.pem").read_text(encoding="utf-8")
     (OUT / "chain.pem").write_text(chain, encoding="utf-8")
+
+
+def signing_environment():
+    """Return c2patool's signing environment with PEM values, not paths."""
+    return {
+        "PATH": "/usr/bin:/bin:/usr/local/bin",
+        "C2PA_PRIVATE_KEY": (OUT / "signer_pkcs8.key").read_text(encoding="utf-8"),
+        "C2PA_SIGN_CERT": (OUT / "chain.pem").read_text(encoding="utf-8"),
+    }
 
 
 def main() -> int:
@@ -113,28 +126,41 @@ def main() -> int:
 
     signed = OUT / "signed.jpg"
     completed = run(
-        [tool, str(args.base), "-m", str(OUT / "manifest.json"), "-o", str(signed), "-f"],
-        env={
-            "PATH": "/usr/bin:/bin:/usr/local/bin",
-            "C2PA_PRIVATE_KEY": str(OUT / "signer_pkcs8.key"),
-            "C2PA_SIGN_CERT": str(OUT / "chain.pem"),
-        },
+        [tool, str(args.base), "-m", str(OUT / "manifest.json"),
+         "--create", "algorithmicMedia", "-o", str(signed), "-f"],
+        env=signing_environment(),
     )
     if completed.returncode != 0 or not signed.exists():
         message = (completed.stderr or completed.stdout).strip()
-        # The universal-apple-darwin build of c2patool 0.27.11 fails to decode
-        # any signing certificate, including its own bundled sample. Treat an
-        # environment that cannot sign as a skip, not a failure.
+        # Treat an environment that cannot sign as a skip, not a failure.
         print("SKIP: c2patool could not sign in this environment.")
         print("  {0}".format(message.splitlines()[0] if message else "no diagnostic"))
         return EXIT_SKIP
 
     tampered = OUT / "tampered.jpg"
     data = bytearray(signed.read_bytes())
-    if len(data) < 2048:
-        print("FAIL: signed asset is too small for a safe bounded mutation.")
+    source = args.base.read_bytes()
+    if not source.startswith(b"\xff\xd8") or not source.endswith(b"\xff\xd9"):
+        print("FAIL: the signed-fixture base must be a JPEG asset.")
         return EXIT_FAIL
-    data[-1024] ^= 0x01
+    source_tail = source[2:]
+    if bytes(data[-len(source_tail):]) != source_tail:
+        print("FAIL: c2patool did not preserve the expected JPEG source tail.")
+        return EXIT_FAIL
+    sos = source.find(b"\xff\xda")
+    if sos < 0 or sos + 4 > len(source):
+        print("FAIL: the base JPEG has no complete start-of-scan marker.")
+        return EXIT_FAIL
+    scan_start = sos + 2 + int.from_bytes(source[sos + 2:sos + 4], "big")
+    candidates = [
+        offset for offset in range(scan_start, len(source) - 2)
+        if source[offset] != 0xFF and source[offset - 1] != 0xFF
+    ]
+    if not candidates:
+        print("FAIL: the base JPEG has no safe scan-data byte to mutate.")
+        return EXIT_FAIL
+    signed_offset = len(data) - len(source) + candidates[len(candidates) // 2]
+    data[signed_offset] ^= 0x01
     tampered.write_bytes(bytes(data))
 
     print("Signed fixture written to {0}".format(OUT))

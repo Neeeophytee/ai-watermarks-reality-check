@@ -26,19 +26,25 @@ def main() -> int:
     parser.add_argument("--c2patool", required=True, type=pathlib.Path)
     parser.add_argument("--signed", required=True, type=pathlib.Path, help="Known signed sample, such as c2patool sample/C.jpg")
     parser.add_argument("--unsigned", required=True, type=pathlib.Path, help="Known unsigned sample, such as c2patool sample/image.jpg")
+    parser.add_argument("--tampered", type=pathlib.Path,
+                        help="Known tampered derivative; otherwise one is created temporarily")
     parser.add_argument("--trust-anchors", type=pathlib.Path)
     args = parser.parse_args()
     verifier = load_verifier()
     signed = verifier.verify_asset(args.signed, str(args.c2patool), str(args.trust_anchors) if args.trust_anchors else None, 30)
     unsigned = verifier.verify_asset(args.unsigned, str(args.c2patool), None, 30)
-    with tempfile.TemporaryDirectory(prefix="c2pa-tamper-test-") as directory:
-        tampered_path = pathlib.Path(directory) / args.signed.name
-        tampered = bytearray(args.signed.read_bytes())
-        if len(tampered) < 2048:
-            raise ValueError("Signed smoke-test asset is too small for a safe bounded mutation.")
-        tampered[-1024] ^= 0x01
-        tampered_path.write_bytes(tampered)
-        tampered_result = verifier.verify_asset(tampered_path, str(args.c2patool), None, 30)
+    if args.tampered:
+        tampered_result = verifier.verify_asset(args.tampered, str(args.c2patool), None, 30)
+    else:
+        with tempfile.TemporaryDirectory(prefix="c2pa-tamper-test-") as directory:
+            tampered_path = pathlib.Path(directory) / args.signed.name
+            tampered = bytearray(args.signed.read_bytes())
+            if len(tampered) < 2048:
+                raise ValueError("Signed smoke-test asset is too small for a safe bounded mutation.")
+            tampered[-1024] ^= 0x01
+            tampered_path.write_bytes(tampered)
+            tampered_result = verifier.verify_asset(
+                tampered_path, str(args.c2patool), None, 30)
     checks = {
         "signed_valid": signed.get("integrity") == "VALID",
         "unsigned_absent": unsigned.get("manifest_presence") == "ABSENT" and unsigned.get("integrity") == "NOT_VERIFIED",

@@ -22,8 +22,8 @@ jobs:
       matrix:
         python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
       - name: Generate fixtures
@@ -39,8 +39,8 @@ jobs:
     name: "live verification against real c2patool"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
       - name: Download pinned c2patool
@@ -89,6 +89,7 @@ jobs:
             --c2patool "$C2PATOOL" \
             --signed tests/fixtures/signed/signed.jpg \
             --unsigned "$C2PA_SAMPLES/image.jpg" \
+            --tampered tests/fixtures/signed/tampered.jpg \
             --trust-anchors tests/fixtures/signed/ca.pem
           echo "Verified a signed asset whose trust chain this repository created."
 
@@ -105,8 +106,8 @@ jobs:
     name: "MCP stdio smoke test"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
       - name: Generate fixtures
