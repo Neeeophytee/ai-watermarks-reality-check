@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-labelledby="title desc">
+  <title id="title">AI Watermarks Reality Check</title>
+  <desc id="desc">Seven portable agent skills to inspect provenance, verify claims, test what survives publishing, audit privacy, and check disclosure.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#080d1a"/>
+      <stop offset="1" stop-color="#121936"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#8b5cf6"/>
+      <stop offset="1" stop-color="#34d399"/>
+    </linearGradient>
+  </defs>
+  <rect width="1280" height="640" rx="28" fill="url(#background)"/>
+  <circle cx="1160" cy="60" r="240" fill="#715cff" opacity="0.16"/>
+  <circle cx="80" cy="660" r="290" fill="#34d399" opacity="0.09"/>
+  <rect x="68" y="60" width="230" height="34" rx="17" fill="#202a48"/>
+  <text x="90" y="83" fill="#a5b4fc" font-family="Inter,Arial,sans-serif" font-size="15" font-weight="700" letter-spacing="1.4">OPEN SOURCE AGENT SKILLS</text>
+  <text x="68" y="175" fill="#f8fafc" font-family="Inter,Arial,sans-serif" font-size="62" font-weight="750">AI Watermarks</text>
+  <text x="68" y="244" fill="#f8fafc" font-family="Inter,Arial,sans-serif" font-size="62" font-weight="750">Reality Check</text>
+  <rect x="68" y="273" width="490" height="5" rx="3" fill="url(#accent)"/>
+  <text x="68" y="326" fill="#cbd5e1" font-family="Inter,Arial,sans-serif" font-size="23">Inspect the evidence. Verify the claim.</text>
+  <text x="68" y="360" fill="#cbd5e1" font-family="Inter,Arial,sans-serif" font-size="23">See what survives publishing.</text>
+
+  <g font-family="Inter,Arial,sans-serif">
+    <rect x="650" y="78" width="252" height="182" rx="22" fill="#151c32" stroke="#6366f1"/>
+    <text x="677" y="116" fill="#a5b4fc" font-size="15" font-weight="700">01  INSPECT</text>
+    <text x="677" y="158" fill="#f8fafc" font-size="22" font-weight="700">Find the signals</text>
+    <text x="677" y="193" fill="#94a3b8" font-size="17">C2PA, metadata,</text>
+    <text x="677" y="220" fill="#94a3b8" font-size="17">and hidden text</text>
+
+    <rect x="930" y="78" width="282" height="182" rx="22" fill="#151c32" stroke="#8b5cf6"/>
+    <text x="957" y="116" fill="#c4b5fd" font-size="15" font-weight="700">02  VERIFY</text>
+    <text x="957" y="158" fill="#f8fafc" font-size="22" font-weight="700">Check the claim</text>
+    <text x="957" y="193" fill="#94a3b8" font-size="17">Integrity and signer trust,</text>
+    <text x="957" y="220" fill="#94a3b8" font-size="17">reported separately</text>
+
+    <rect x="650" y="288" width="252" height="182" rx="22" fill="#151c32" stroke="#64748b"/>
+    <text x="677" y="326" fill="#94a3b8" font-size="15" font-weight="700">03  TEST</text>
+    <text x="677" y="368" fill="#f8fafc" font-size="22" font-weight="700">Follow the evidence</text>
+    <text x="677" y="403" fill="#94a3b8" font-size="17">Resize, convert, upload,</text>
+    <text x="677" y="430" fill="#94a3b8" font-size="17">download, compare</text>
+
+    <rect x="930" y="288" width="282" height="182" rx="22" fill="#102a28" stroke="#34d399"/>
+    <text x="957" y="326" fill="#6ee7b7" font-size="15" font-weight="700">04  DISCLOSE</text>
+    <text x="957" y="368" fill="#f8fafc" font-size="22" font-weight="700">Make gaps visible</text>
+    <text x="957" y="403" fill="#94a3b8" font-size="17">Privacy risks and clear</text>
+    <text x="957" y="430" fill="#94a3b8" font-size="17">human-readable labels</text>
+  </g>
+
+  <g font-family="Inter,Arial,sans-serif" font-size="15" font-weight="700">
+    <rect x="68" y="420" width="142" height="40" rx="20" fill="#232c4d"/>
+    <text x="90" y="446" fill="#e2e8f0">CLAUDE CODE</text>
+    <rect x="222" y="420" width="94" height="40" rx="20" fill="#232c4d"/>
+    <text x="244" y="446" fill="#e2e8f0">CODEX</text>
+    <rect x="328" y="420" width="130" height="40" rx="20" fill="#232c4d"/>
+    <text x="350" y="446" fill="#e2e8f0">GEMINI CLI</text>
+  </g>
+
+  <text x="68" y="540" fill="#e2e8f0" font-family="Inter,Arial,sans-serif" font-size="19">7 portable skills  ·  read-only analyzers  ·  fail-closed results</text>
+  <text x="68" y="581" fill="#64748b" font-family="Inter,Arial,sans-serif" font-size="17">AI Watermarks Reality Check  ·  Web After AI</text>
+</svg>

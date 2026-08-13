@@ -1,8 +1,12 @@
 # AI Watermarks Reality Check
 
+[![CI](https://github.com/Neeeophytee/ai-watermarks-reality-check/actions/workflows/validate.yml/badge.svg)](https://github.com/Neeeophytee/ai-watermarks-reality-check/actions/workflows/validate.yml)
+[![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-6b4fbb.svg)](LICENSE)
+[![skills.sh](https://skills.sh/b/Neeeophytee/ai-watermarks-reality-check)](https://skills.sh/Neeeophytee/ai-watermarks-reality-check)
+
 Seven portable agent skills for checking what AI provenance evidence exists, whether it verifies, what a publishing pipeline destroys, and what must still be disclosed.
 
-![Evidence ladder](assets/evidence-ladder.svg)
+![AI Watermarks Reality Check](assets/ai-watermarks-reality-check.svg)
 
 The pack deliberately does **not** remove watermarks or Content Credentials. It makes provenance observable without pretending that one signal can prove authorship.
 
@@ -15,6 +19,14 @@ This pack gives teams a reproducible workflow:
 ```text
 inspect → verify → transform-test → privacy-audit → disclosure-check
 ```
+
+## Agent and model compatibility
+
+The skills work with [Claude Code](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview), [Codex](https://learn.chatgpt.com/docs/build-skills), [Gemini CLI](https://codelabs.developers.google.com/gemini-cli/how-to-create-agent-skills-for-gemini-cli), and other Agent Skills-compatible tools.
+
+Use them to audit supported evidence in files and text from Claude, ChatGPT, Gemini, open models, image generators, or any other source. Coverage follows the evidence type rather than a vendor name. C2PA, metadata, disclosure records, pipeline survival, and hidden Unicode channels can be inspected wherever they appear.
+
+There is no universal detector for every proprietary or secret-key watermark. When an official detector, configuration, or key is unavailable, the result remains `UNVERIFIABLE`, `UNSUPPORTED`, or `UNKNOWN`.
 
 ## The seven skills
 
@@ -36,9 +48,9 @@ npx skills add Neeeophytee/ai-watermarks-reality-check
 
 Or copy one directory from `skills/` into your agent's skill directory. Each skill folder is self-contained: the shared parsing core is vendored into every `scripts/` directory, so a single folder works on its own.
 
-### As an MCP server
+### As a local MCP server
 
-For agents that cannot run shell commands, all seven skills are exposed as MCP tools:
+For MCP-compatible clients, all seven analyzers can also be exposed as local stdio tools:
 
 ```json
 {
@@ -51,7 +63,9 @@ For agents that cannot run shell commands, all seven skills are exposed as MCP t
 }
 ```
 
-The server is **dual-era**: it implements the current stateless revision
+No hosted service is required. The MCP client starts `python3 mcp/server.py` on the user's machine and exchanges JSON-RPC messages with it through standard input and output. The server dispatches calls to the same read-only analyzers, reads local files, and returns structured results. Cryptographic verification uses the user's local `c2patool` installation. Remote-manifest access stays disabled unless the caller explicitly enables it.
+
+The server supports two protocol eras. It implements the current stateless revision
 `2026-07-28` and still answers the legacy `initialize` handshake used by
 `2025-11-25` and earlier clients.
 
@@ -97,6 +111,8 @@ python3 skills/detect-text-watermark/scripts/detect_text_watermark.py draft.md
 Scripts emit JSON to stdout and diagnostics to stderr. Remote-manifest fetching is disabled by default and requires `--allow-network`. A missing verifier, an unsupported verifier version, an inaccessible remote manifest, or an unpublished detector produces an explicit unknown state rather than a pass.
 
 ## Evidence model
+
+![The provenance evidence ladder](assets/evidence-ladder.svg)
 
 | Dimension | States | Meaning |
 | --- | --- | --- |

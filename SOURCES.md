@@ -87,6 +87,23 @@ the protocol version carried per request in `_meta`, a mandatory
 (`-32022`). Unknown tools and malformed requests are JSON-RPC protocol errors
 (`-32602`), not `isError` results.
 
+## Agent Skills compatibility and discovery
+
+- [Claude Agent Skills](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview)
+- [Build skills for ChatGPT and Codex](https://learn.chatgpt.com/docs/build-skills)
+- [Use Agent Skills with Gemini CLI](https://codelabs.developers.google.com/gemini-cli/how-to-create-agent-skills-for-gemini-cli)
+- [skills.sh FAQ](https://skills.sh/docs/faq)
+
+Reviewed **2026-08-13**. Claude Code, Codex, and Gemini CLI all document
+filesystem-based skills built around `SKILL.md`. This establishes agent-host
+compatibility, not universal watermark coverage. The analyzers remain
+vendor-agnostic where evidence formats are public and explicitly inconclusive
+where a proprietary detector, configuration, or key is unavailable.
+
+The skills.sh leaderboard is populated from anonymous `skills` CLI installation
+telemetry. A public GitHub repository is discoverable through
+`npx skills add OWNER/REPO`; it does not need a manual directory submission.
+
 ## Updating this repository
 
 Re-check the official pages before changing any claim about model coverage, detector availability, supported formats, trust lists, or legal obligations. Re-run the live smoke test against the current `c2patool` release and update the verified-behavior table above.
