@@ -8,7 +8,7 @@ The pack deliberately does **not** remove watermarks or Content Credentials. It 
 
 ## Why this exists
 
-Anthropic says newly launched Claude models are gaining imperceptible text watermarks and supported image files can carry signed C2PA metadata. Its public detector and detailed text-watermark specification are not yet available. Meanwhile, common publishing actions—resizing, screenshots, conversion, social uploads—can remove file metadata.
+Anthropic says newly launched Claude models are gaining imperceptible text watermarks and supported image files can carry signed C2PA metadata. Its public detector and detailed text-watermark specification are not yet available. Meanwhile, common publishing actions such as resizing, screenshots, conversion, and social uploads can remove file metadata.
 
 This pack gives teams a reproducible workflow:
 
@@ -131,12 +131,12 @@ Detection is structural, at the locations the C2PA 2.4 specification defines.
 | PDF | Associated File `/AFRelationship /C2PA_Manifest` | **no** |
 | BMFF (MP4/HEIC/AVIF) | `uuid` box with the C2PA UUID, or `jumb` | **no** |
 | OOXML / ODF / ZIP | packaged manifest entry | **no** |
-| Any | detached `.c2pa` sidecar | — |
+| Any | detached `.c2pa` sidecar | not format-specific |
 
 **Fail closed.** The right-hand column is the important one. For formats marked
 **no**, this build inspects the carriers listed but cannot walk the container
-exhaustively — compressed PDF object streams and fragmented BMFF are the reasons
-— so finding nothing yields `UNKNOWN` with a stated reason, never `ABSENT`.
+exhaustively because of compressed PDF object streams and fragmented BMFF.
+Finding nothing therefore yields `UNKNOWN` with a stated reason, never `ABSENT`.
 
 | Confidence | Meaning |
 | --- | --- |
@@ -166,9 +166,9 @@ Every entrypoint uses the same convention, so an orchestrating agent can apply o
 
 | Code | Meaning |
 | --- | --- |
-| `0` | Conclusive and good — verified valid, no required gaps, no risk found |
-| `1` | Conclusive and bad — invalid, required gaps, HIGH privacy risk, provenance lost, covert channel found |
-| `2` | Inconclusive — unknown state, missing or unsupported verifier, unsupported container |
+| `0` | Conclusive and good: verified valid, no required gaps, no risk found |
+| `1` | Conclusive and bad: invalid, required gaps, HIGH privacy risk, provenance lost, covert channel found |
+| `2` | Inconclusive: unknown state, missing or unsupported verifier, unsupported container |
 
 ## Output schemas
 
@@ -180,11 +180,11 @@ Machine-readable JSON Schemas for all seven tools live in [`schemas/`](schemas).
 
 | Adapter | Runs? | State when it cannot run |
 | --- | --- | --- |
-| `anthropic-official` | never | `UNVERIFIABLE` — no public detector or specification exists |
+| `anthropic-official` | never | `UNVERIFIABLE`: no public detector or specification exists |
 | `synthid-text` | never in this build | `NOT_CONFIGURED` without keys, `UNSUPPORTED` with them |
 | `kgw-research` | never in this build | `NOT_CONFIGURED` without a key, `UNSUPPORTED` with one |
-| `unicode-covert-channel` | **yes** | — |
-| `c2pa-text-manifest` | **yes** | — |
+| `unicode-covert-channel` | **yes** | not applicable |
+| `c2pa-text-manifest` | **yes** | not applicable |
 
 The state vocabulary distinguishes five situations, so a caller can never mistake
 "did not look" for "looked and found nothing":
@@ -200,7 +200,7 @@ The state vocabulary distinguishes five situations, so a caller can never mistak
 
 **Only `DETECTED` and `NOT_DETECTED` mean a detector ran**, and only those
 contribute to the top-level status. `SynthID` and `KGW` accept configuration but
-this build performs **no scoring** for either — they are unavailable
+this build performs **no scoring** for either; they are unavailable
 integrations, not silent passes.
 
 Keyed model-level watermarks bias token sampling with a secret key; detection requires that key. A third party cannot check them, and this pack says so rather than guessing.
@@ -212,52 +212,6 @@ covert-channel findings rather than reported as suspicious.
 The covert-channel scan finds Unicode tag characters (ASCII smuggling), bidi overrides, variation selectors, zero-width characters, exotic spaces, and mixed-script homoglyphs. These are **text-integrity and prompt-injection signals**, not watermark evidence: they identify no model or vendor.
 
 **Deliberate non-goal:** statistical or stylometric AI-text classifiers are not implemented and will not be added. Their false-positive rates make them unsafe for accusing a person of AI authorship.
-
-## Development
-
-```bash
-python3 tests/make_fixtures.py
-python3 -m unittest discover -s tests -v
-python3 scripts/check_repo.py
-python3 scripts/sync_shared.py --check
-```
-
-To exercise the cryptographic trust path against a certificate this repository
-creates, rather than a vendor sample:
-
-```bash
-python3 tests/make_signed_fixture.py --c2patool /path/to/c2patool
-```
-
-It generates an ES256 chain, signs a fixture, and writes a tampered copy into
-`tests/fixtures/signed/` (gitignored — no key is ever committed). Six otherwise
-skipped tests then verify `VALID`, `TRUSTED` against our own anchor, and
-`INVALID` after tampering. Exits `3` and skips if signing is unavailable.
-
-`shared/provenance_core.py` is the source of truth for all container parsing. It is vendored into each skill by `scripts/sync_shared.py`; CI fails if the copies drift.
-
-CI runs the suite on Python 3.9–3.13, regenerates every fixture, drives the MCP
-server over stdio, and runs a dedicated job that downloads a
-**checksum-pinned** `c2patool` release and fails if the live verification or
-self-signed trust tests are skipped.
-
-The six self-signed tests skip locally when the generated signing fixture is not
-present; the dedicated CI job requires them to execute. Python 3.9–3.13 remain
-part of the hosted matrix.
-
-For a local live smoke test:
-
-```bash
-python3 scripts/live_c2pa_smoke.py \
-  --c2patool /path/to/c2patool \
-  --signed /path/to/sample/C.jpg \
-  --unsigned /path/to/sample/image.jpg \
-  --trust-anchors /path/to/sample/trust_anchors.pem
-```
-
-The smoke test also creates a temporary tampered derivative and requires it to be rejected.
-Pass `--tampered /path/to/known-tampered.jpg` when a fixture already contains a
-deliberate mutation in content covered by the manifest's hard binding.
 
 ## Scope and safety
 
@@ -274,4 +228,4 @@ See [SOURCES.md](SOURCES.md). Product behavior is volatile; the source review da
 
 ## License
 
-MIT
+[GNU Affero General Public License v3.0](LICENSE) (`AGPL-3.0-only`)
