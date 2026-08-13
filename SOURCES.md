@@ -93,6 +93,7 @@ the protocol version carried per request in `_meta`, a mandatory
 - [Build skills for ChatGPT and Codex](https://learn.chatgpt.com/docs/build-skills)
 - [Use Agent Skills with Gemini CLI](https://codelabs.developers.google.com/gemini-cli/how-to-create-agent-skills-for-gemini-cli)
 - [skills.sh FAQ](https://skills.sh/docs/faq)
+- [skills CLI package](https://www.npmjs.com/package/skills)
 
 Reviewed **2026-08-13**. Claude Code, Codex, and Gemini CLI all document
 filesystem-based skills built around `SKILL.md`. This establishes agent-host
@@ -103,6 +104,9 @@ where a proprietary detector, configuration, or key is unavailable.
 The skills.sh leaderboard is populated from anonymous `skills` CLI installation
 telemetry. A public GitHub repository is discoverable through
 `npx skills add OWNER/REPO`; it does not need a manual directory submission.
+The published `skills` CLI version 1.5.22 declares Node.js 22.20 or newer in its
+package metadata. This installer prerequisite is separate from the Python 3.9
+runtime used by the installed analyzers.
 
 ## Updating this repository
 

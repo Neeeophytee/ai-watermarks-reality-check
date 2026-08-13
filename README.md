@@ -1,8 +1,7 @@
 # AI Watermarks Reality Check
 
 [![CI](https://github.com/Neeeophytee/ai-watermarks-reality-check/actions/workflows/validate.yml/badge.svg)](https://github.com/Neeeophytee/ai-watermarks-reality-check/actions/workflows/validate.yml)
-[![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-6b4fbb.svg)](LICENSE)
-[![skills.sh](https://skills.sh/b/Neeeophytee/ai-watermarks-reality-check)](https://skills.sh/Neeeophytee/ai-watermarks-reality-check)
+[![Subscribe to Web After AI](https://img.shields.io/badge/Subscribe-Web%20After%20AI-FF6719?logo=substack&logoColor=white)](https://webafterai.substack.com/subscribe)
 
 Seven portable agent skills for checking what AI provenance evidence exists, whether it verifies, what a publishing pipeline destroys, and what must still be disclosed.
 
@@ -45,6 +44,9 @@ There is no universal detector for every proprietary or secret-key watermark. Wh
 ```bash
 npx skills add Neeeophytee/ai-watermarks-reality-check
 ```
+
+The current `skills` installer requires Node.js 22.20 or newer. The installed
+skills themselves require only Python 3.9 or newer.
 
 Or copy one directory from `skills/` into your agent's skill directory. Each skill folder is self-contained: the shared parsing core is vendored into every `scripts/` directory, so a single folder works on its own.
 
