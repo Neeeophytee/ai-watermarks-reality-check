@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Neeeophytee/ai-watermarks-reality-check/schemas/detect-text-watermark.json",
+  "title": "detect-text-watermark output",
+  "type": "object",
+  "required": [
+    "schema_version", "tool", "source", "status",
+    "file_bytes", "scanned_bytes", "scan_complete", "file_sha256", "scanned_sha256",
+    "detectors", "detector_count", "ran_detector_count", "did_not_run_detectors",
+    "keyed_watermark_status", "reason", "non_goals", "limitations"
+  ],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "tool": { "const": "detect-text-watermark" },
+    "source": { "type": ["string", "null"] },
+    "status": {
+      "type": "string",
+      "enum": ["SIGNAL_FOUND", "NO_SIGNAL_OBSERVED", "INCONCLUSIVE", "UNKNOWN"]
+    },
+    "file_bytes": { "type": ["integer", "null"], "minimum": 0 },
+    "scanned_bytes": { "type": ["integer", "null"], "minimum": 0 },
+    "scan_complete": { "type": ["boolean", "null"] },
+    "file_sha256": { "oneOf": [{ "$ref": "common.json#/$defs/sha256" }, { "type": "null" }] },
+    "scanned_sha256": { "oneOf": [{ "$ref": "common.json#/$defs/sha256" }, { "type": "null" }] },
+    "detector_count": { "type": "integer", "minimum": 0 },
+    "ran_detector_count": { "type": "integer", "minimum": 0 },
+    "did_not_run_detectors": { "type": "array", "items": { "type": "string" } },
+    "keyed_watermark_status": { "type": "string" },
+    "reason": { "type": ["string", "null"] },
+    "non_goals": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+    "limitations": { "type": "array", "items": { "type": "string" } },
+    "detectors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["detector", "provider", "method", "requires", "state", "detail", "ran", "available"],
+        "properties": {
+          "detector": { "type": "string" },
+          "provider": { "type": "string" },
+          "method": { "type": "string" },
+          "requires": { "type": "string" },
+          "state": {
+            "type": "string",
+            "enum": ["DETECTED", "NOT_DETECTED", "NOT_CONFIGURED", "UNSUPPORTED", "UNVERIFIABLE", "FAILED"]
+          },
+          "detail": { "type": "string" },
+          "ran": { "type": "boolean" },
+          "available": { "type": "boolean" },
+          "risk": { "type": "string" },
+          "findings": { "type": "array" },
+          "sidecar": { "type": "string" },
+          "wrapper": { "type": "object" },
+          "c2pa_text_manifest": { "type": ["object", "null"] }
+        },
+        "allOf": [
+          {
+            "$comment": "A detector that did not run must never report a conclusive outcome.",
+            "if": { "properties": { "ran": { "const": false } }, "required": ["ran"] },
+            "then": {
+              "properties": {
+                "state": { "enum": ["NOT_CONFIGURED", "UNSUPPORTED", "UNVERIFIABLE", "FAILED"] }
+              }
+            }
+          },
+          {
+            "$comment": "Only a detector that ran may report DETECTED or NOT_DETECTED.",
+            "if": {
+              "properties": { "state": { "enum": ["DETECTED", "NOT_DETECTED"] } },
+              "required": ["state"]
+            },
+            "then": { "properties": { "ran": { "const": true } } }
+          }
+        ]
+      }
+    }
+  },
+  "allOf": [
+    {
+      "$comment": "A verdict requires at least one detector that actually ran.",
+      "if": {
+        "properties": { "status": { "enum": ["SIGNAL_FOUND", "NO_SIGNAL_OBSERVED"] } },
+        "required": ["status"]
+      },
+      "then": { "properties": { "ran_detector_count": { "minimum": 1 } } }
+    },
+    {
+      "$comment": "A partial scan can never produce a conclusive clean result.",
+      "if": {
+        "properties": { "status": { "const": "NO_SIGNAL_OBSERVED" } },
+        "required": ["status"]
+      },
+      "then": { "properties": { "scan_complete": { "const": true } } }
+    },
+    {
+      "$comment": "An inconclusive or unknown result must explain itself.",
+      "if": {
+        "properties": { "status": { "enum": ["INCONCLUSIVE", "UNKNOWN"] } },
+        "required": ["status"]
+      },
+      "then": { "properties": { "reason": { "type": "string" } } }
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "publication": "Example AI-assisted article",
+  "jurisdictions": ["EU", "US"],
+  "reviewed_at": "2026-08-12T12:00:00Z",
+  "outputs": [
+    {
+      "name": "article-body",
+      "media_type": "text/markdown",
+      "ai_generated": true,
+      "provider": "Anthropic",
+      "model": "UNKNOWN",
+      "generated_at": "2026-08-12T10:00:00Z",
+      "human_edits_documented": true,
+      "disclosure": {
+        "present": true,
+        "text": "Drafted with Claude and edited by the Web After AI team."
+      },
+      "provenance": {
+        "manifest_presence": "NOT_APPLICABLE",
+        "integrity": "NOT_APPLICABLE",
+        "signer_trust": "NOT_APPLICABLE",
+        "text_watermark": "UNVERIFIABLE",
+        "asset_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    }
+  ]
+}

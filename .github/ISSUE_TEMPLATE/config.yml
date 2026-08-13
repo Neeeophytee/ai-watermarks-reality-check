@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security report
+    url: https://github.com/Neeeophytee/ai-watermarks-reality-check/security/advisories/new
+    about: Report a crash, a path escape, or an unjustified conclusive result privately.
+  - name: c2patool or C2PA specification issue
+    url: https://github.com/contentauth/c2pa-rs/issues
+    about: Defects in the verifier or the standard belong upstream.

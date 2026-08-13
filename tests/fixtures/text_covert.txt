@@ -1,0 +1,7 @@
+This looks like ordinary text.
+Zero width here:​ and a joiner:‍
+Tag smuggling:󠁁󠁂󠁃
+Bidi override:‮ reversed ‬
+Variation selector:️
+Exotic space and  nbsp
+Homoglyph: paуpal versus paypal

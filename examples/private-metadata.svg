@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180" viewBox="0 0 320 180">
+  <title>Example launch card</title>
+  <metadata>Creator: Example Person; Software: Example Editor 1.0</metadata>
+  <rect width="320" height="180" fill="#0b1020"/>
+  <text x="24" y="94" fill="#f8fafc" font-family="sans-serif" font-size="22">Audit before release</text>
+</svg>

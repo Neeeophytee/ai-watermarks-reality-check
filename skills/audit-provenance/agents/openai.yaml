@@ -1,0 +1,4 @@
+interface:
+  display_name: "Audit Provenance"
+  short_description: "Answer the five provenance questions for one asset"
+  default_prompt: "Use $audit-provenance to report whether provenance was located, verified, and trusted for an asset, whether the scan was complete, and exactly what remains unknown."

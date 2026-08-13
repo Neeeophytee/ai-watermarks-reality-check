@@ -1,0 +1,240 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Neeeophytee/ai-watermarks-reality-check/schemas/map-provenance-survival.json",
+  "title": "map-provenance-survival output",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "tool",
+    "original",
+    "derivatives",
+    "verifier",
+    "verifier_version",
+    "verifier_supported",
+    "verifier_requested",
+    "network_allowed",
+    "summary",
+    "limitations",
+    "reproducibility",
+    "reason"
+  ],
+  "$defs": {
+    "observation": {
+      "type": "object",
+      "required": [
+        "path",
+        "manifest_presence",
+        "integrity",
+        "state"
+      ],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "sha256": {
+          "oneOf": [
+            {
+              "$ref": "common.json#/$defs/sha256"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bytes": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "format": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "c2pa_markers": {
+          "type": "array",
+          "items": {
+            "$ref": "common.json#/$defs/c2pa_marker"
+          }
+        },
+        "scan_complete": {
+          "type": "boolean"
+        },
+        "manifest_presence": {
+          "$ref": "common.json#/$defs/manifest_presence"
+        },
+        "integrity": {
+          "$ref": "common.json#/$defs/integrity"
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "PRESERVED_VALID",
+            "PRESENT_INVALID",
+            "POSSIBLE_NOT_VERIFIED",
+            "NO_EVIDENCE_OBSERVED",
+            "UNKNOWN"
+          ]
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "manifest": {
+          "$ref": "common.json#/$defs/manifest_summary"
+        },
+        "operation": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "tool": {
+      "const": "map-provenance-survival"
+    },
+    "original": {
+      "$ref": "#/$defs/observation"
+    },
+    "derivatives": {
+      "type": "array",
+      "items": {
+        "allOf": [
+          {
+            "$ref": "#/$defs/observation"
+          },
+          {
+            "type": "object",
+            "required": [
+              "label",
+              "survival"
+            ],
+            "properties": {
+              "label": {
+                "type": "string"
+              },
+              "survival": {
+                "type": "string",
+                "enum": [
+                  "PRESERVED_VALID",
+                  "PRESENT_INVALID",
+                  "POSSIBLE_NOT_VERIFIED",
+                  "LOST_OR_UNAVAILABLE",
+                  "NO_BASELINE_EVIDENCE",
+                  "UNKNOWN"
+                ]
+              }
+            }
+          }
+        ]
+      }
+    },
+    "verifier": {
+      "type": "string"
+    },
+    "verifier_version": {
+      "type": "string"
+    },
+    "verifier_supported": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "verifier_requested": {
+      "type": "boolean"
+    },
+    "network_allowed": {
+      "type": "boolean"
+    },
+    "summary": {
+      "type": "object",
+      "required": [
+        "derivative_count",
+        "preserved_valid",
+        "lost_or_unavailable",
+        "unknown"
+      ],
+      "properties": {
+        "derivative_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "preserved_valid": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "lost_or_unavailable": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unknown": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "reproducibility": {
+      "type": "object",
+      "required": [
+        "recorded_at",
+        "verifier",
+        "verifier_version",
+        "core_schema_version",
+        "python",
+        "platform",
+        "network_allowed",
+        "command",
+        "note"
+      ],
+      "properties": {
+        "recorded_at": {
+          "type": "string"
+        },
+        "verifier": {
+          "type": "string"
+        },
+        "verifier_version": {
+          "type": "string"
+        },
+        "core_schema_version": {
+          "type": "string"
+        },
+        "python": {
+          "type": "string"
+        },
+        "platform": {
+          "type": "string"
+        },
+        "network_allowed": {
+          "type": "boolean"
+        },
+        "command": {
+          "type": "string"
+        },
+        "note": {
+          "type": "string"
+        }
+      }
+    },
+    "reason": {
+      "type": ["string", "null"]
+    }
+  }
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Inspect Content Provenance"
+  short_description: "Inspect content for provenance and watermark signals"
+  default_prompt: "Use $inspect-content-provenance to inspect a file or text sample for verifiable provenance signals and explain the result without overclaiming."

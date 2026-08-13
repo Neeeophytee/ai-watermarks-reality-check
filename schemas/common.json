@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Neeeophytee/ai-watermarks-reality-check/schemas/common.json",
+  "title": "Shared provenance definitions",
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "manifest_presence": {
+      "type": "string",
+      "enum": ["PRESENT", "POSSIBLE", "ABSENT", "UNKNOWN", "NOT_APPLICABLE"]
+    },
+    "integrity": {
+      "type": "string",
+      "enum": ["VALID", "INVALID", "NOT_VERIFIED", "UNKNOWN", "NOT_APPLICABLE"]
+    },
+    "signer_trust": {
+      "type": "string",
+      "enum": ["TRUSTED", "UNTRUSTED", "NOT_CHECKED", "UNKNOWN", "NOT_APPLICABLE"]
+    },
+    "text_watermark_status": {
+      "type": "string",
+      "enum": ["UNVERIFIABLE", "NOT_APPLICABLE"]
+    },
+    "confidence": {
+      "type": "string",
+      "enum": ["STRUCTURAL", "MODERATE", "SIDECAR"]
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["HIGH", "MEDIUM", "LOW"]
+    },
+    "c2pa_marker": {
+      "type": "object",
+      "required": ["location", "kind", "confidence"],
+      "properties": {
+        "location": { "type": "string" },
+        "kind": { "type": "string" },
+        "confidence": { "$ref": "common.json#/$defs/confidence" }
+      }
+    },
+    "manifest_summary": {
+      "type": "object",
+      "required": ["claim_generator", "actions", "assertion_labels", "ingredient_count"],
+      "properties": {
+        "claim_generator": { "type": ["string", "null"] },
+        "title": { "type": ["string", "null"] },
+        "format": { "type": ["string", "null"] },
+        "signature_alg": { "type": ["string", "null"] },
+        "signature_issuer": { "type": ["string", "null"] },
+        "signature_time": { "type": ["string", "null"] },
+        "actions": { "type": "array", "items": { "type": "string" } },
+        "assertion_labels": { "type": "array", "items": { "type": "string" } },
+        "ingredient_count": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "covert_channels": {
+      "type": ["object", "null"],
+      "required": ["status", "risk", "findings", "interpretation"],
+      "properties": {
+        "status": { "type": "string", "enum": ["COVERT_CHANNEL_PRESENT", "NONE_OBSERVED"] },
+        "risk": { "type": "string", "enum": ["HIGH", "MEDIUM", "LOW", "NONE_OBSERVED"] },
+        "interpretation": { "type": "string" },
+        "findings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["channel", "name", "count", "severity", "note"],
+            "properties": {
+              "channel": { "type": "string" },
+              "codepoint": { "type": ["string", "null"] },
+              "name": { "type": "string" },
+              "count": { "type": "integer" },
+              "severity": { "$ref": "common.json#/$defs/severity" },
+              "note": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

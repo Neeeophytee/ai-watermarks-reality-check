@@ -1,0 +1,4 @@
+interface:
+  display_name: "Detect Text Watermark"
+  short_description: "Run available text-provenance detectors honestly"
+  default_prompt: "Use $detect-text-watermark to run every available text-provenance detector and report which signals could and could not be checked, without claiming that unmarked text is human-written."

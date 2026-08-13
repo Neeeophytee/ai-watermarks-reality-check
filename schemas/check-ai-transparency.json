@@ -1,0 +1,190 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Neeeophytee/ai-watermarks-reality-check/schemas/check-ai-transparency.json",
+  "title": "check-ai-transparency output",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "tool",
+    "publication",
+    "jurisdictions",
+    "status",
+    "output_count",
+    "required_gap_count",
+    "review_item_count",
+    "gaps",
+    "legal_conclusion",
+    "limitations",
+    "reason"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "tool": {
+      "const": "check-ai-transparency"
+    },
+    "publication": {
+      "type": "string"
+    },
+    "jurisdictions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "READY_FOR_REVIEW",
+        "READY_WITH_REVIEW_ITEMS",
+        "GAPS_FOUND",
+        "UNKNOWN"
+      ]
+    },
+    "output_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "required_gap_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "review_item_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "gaps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "output",
+          "field",
+          "severity",
+          "message"
+        ],
+        "properties": {
+          "output": {
+            "type": "string"
+          },
+          "field": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "REQUIRED",
+              "REVIEW"
+            ]
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "legal_conclusion": {
+      "const": "NOT_PROVIDED"
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "reason": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "$comment": "READY_FOR_REVIEW means nothing at all is outstanding.",
+      "if": {
+        "properties": {
+          "status": {
+            "const": "READY_FOR_REVIEW"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "required_gap_count": {
+            "const": 0
+          },
+          "review_item_count": {
+            "const": 0
+          }
+        }
+      }
+    },
+    {
+      "$comment": "Advisory items never block; required gaps always do.",
+      "if": {
+        "properties": {
+          "status": {
+            "const": "READY_WITH_REVIEW_ITEMS"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "required_gap_count": {
+            "const": 0
+          },
+          "review_item_count": {
+            "minimum": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "GAPS_FOUND"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "required_gap_count": {
+            "minimum": 1
+          }
+        }
+      }
+    },
+    {
+      "$comment": "An unknown result must explain itself.",
+      "if": {
+        "properties": {
+          "status": {
+            "const": "UNKNOWN"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "reason": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  ]
+}

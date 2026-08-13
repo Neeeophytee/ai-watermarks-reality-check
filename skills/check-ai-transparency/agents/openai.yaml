@@ -1,0 +1,4 @@
+interface:
+  display_name: "Check Ai Transparency"
+  short_description: "Check evidence for AI transparency disclosures"
+  default_prompt: "Use $check-ai-transparency to review AI-output evidence and disclosure coverage without making legal-compliance claims."

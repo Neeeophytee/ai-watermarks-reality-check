@@ -1,0 +1,149 @@
+name: validate
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  C2PATOOL_VERSION: "0.27.11"
+  # SHA-256 of the pinned official release archive, verified on 2026-08-13.
+  # Update deliberately alongside C2PATOOL_VERSION; never loosen this check.
+  C2PATOOL_SHA256: "1cb4e3cf1c0371ca1f29b8ea6975800d0416bfbaaacf8c6a2481026959ff9a79"
+
+jobs:
+  test:
+    name: "tests (python ${{ matrix.python-version }})"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Generate fixtures
+        run: python tests/make_fixtures.py
+      - name: Unit tests
+        run: python -m unittest discover -s tests -v
+      - name: Repository validation
+        run: python scripts/check_repo.py
+      - name: Vendored core is in sync
+        run: python scripts/sync_shared.py --check
+
+  live-c2pa:
+    name: "live verification against real c2patool"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Download pinned c2patool
+        run: |
+          set -euo pipefail
+          mkdir -p .tools
+          URL="https://github.com/contentauth/c2pa-rs/releases/download/c2patool-v${C2PATOOL_VERSION}/c2patool-v${C2PATOOL_VERSION}-x86_64-unknown-linux-gnu.tar.gz"
+          curl -sSL --retry 3 -o .tools/c2patool.tar.gz "$URL"
+          echo "${C2PATOOL_SHA256}  .tools/c2patool.tar.gz" | sha256sum -c -
+          tar -xzf .tools/c2patool.tar.gz -C .tools
+          find .tools -name c2patool -type f -exec chmod +x {} \;
+          echo "C2PATOOL=$(find "$PWD/.tools" -name c2patool -type f | head -1)" >> "$GITHUB_ENV"
+          echo "C2PA_SAMPLES=$(dirname "$(find "$PWD/.tools" -name 'C.jpg' | head -1)")" >> "$GITHUB_ENV"
+      - name: Report verifier version
+        run: |
+          "$C2PATOOL" -V
+      - name: Generate fixtures
+        run: python tests/make_fixtures.py
+      - name: Full suite with live verification
+        run: python -m unittest discover -s tests -v
+      - name: Assert live tests were not skipped
+        run: |
+          set -euo pipefail
+          python -m unittest discover -s tests -v 2>&1 | tee /tmp/out.txt
+          if grep -q "no real c2patool" /tmp/out.txt; then
+            echo "::error::Live c2patool tests were skipped; the pinned download did not resolve."
+            exit 1
+          fi
+      - name: Signed / unsigned / tampered smoke test
+        run: |
+          python scripts/live_c2pa_smoke.py \
+            --c2patool "$C2PATOOL" \
+            --signed "$C2PA_SAMPLES/C.jpg" \
+            --unsigned "$C2PA_SAMPLES/image.jpg" \
+            --trust-anchors "$C2PA_SAMPLES/trust_anchors.pem"
+
+      - name: Sign a fixture with our own certificate (required)
+        run: |
+          set -euo pipefail
+          python tests/make_signed_fixture.py --c2patool "$C2PATOOL"
+
+      - name: Verify our own signed asset against our own trust anchor
+        run: |
+          set -euo pipefail
+          python scripts/live_c2pa_smoke.py \
+            --c2patool "$C2PATOOL" \
+            --signed tests/fixtures/signed/signed.jpg \
+            --unsigned "$C2PA_SAMPLES/image.jpg" \
+            --trust-anchors tests/fixtures/signed/ca.pem
+          echo "Verified a signed asset whose trust chain this repository created."
+
+      - name: Re-run suite and require the self-signed tests to execute
+        run: |
+          set -euo pipefail
+          python -m unittest discover -s tests -v 2>&1 | tee /tmp/signed.txt
+          if grep -q "no self-signed fixture" /tmp/signed.txt; then
+            echo "::error::Self-signed trust tests were skipped in the dedicated live job."
+            exit 1
+          fi
+
+  mcp-smoke:
+    name: "MCP stdio smoke test"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Generate fixtures
+        run: python tests/make_fixtures.py
+      - name: Drive the server over stdio
+        run: |
+          set -euo pipefail
+          META='"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientCapabilities":{}}'
+          {
+            echo "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"server/discover\",\"params\":{$META}}"
+            echo "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/list\",\"params\":{$META}}"
+            echo "{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"tools/call\",\"params\":{$META,\"name\":\"audit_metadata_privacy\",\"arguments\":{\"path\":\"tests/fixtures/jpeg_iptc.jpg\"}}}"
+            echo '{"jsonrpc":"2.0","id":4,"method":"tools/list","params":{"_meta":{"io.modelcontextprotocol/protocolVersion":"1900-01-01"}}}'
+            echo '{"jsonrpc":"2.0","id":5,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"ci-smoke","version":"1.0"}}}'
+          } | python mcp/server.py > /tmp/mcp.jsonl
+          python - <<'PY'
+          import json
+          rows = {r.get('id'): r for r in (json.loads(l) for l in open('/tmp/mcp.jsonl'))}
+          assert len(rows) == 5, rows
+
+          discover = rows[1]['result']
+          assert discover['resultType'] == 'complete', discover
+          assert '2026-07-28' in discover['supportedVersions'], discover
+          assert discover['_meta']['io.modelcontextprotocol/serverInfo']['name'], discover
+
+          assert len(rows[2]["result"]["tools"]) == 7, rows[2]
+
+          payload = json.loads(rows[3]['result']['content'][0]['text'])
+          assert payload['risk'] == 'HIGH', payload
+
+          err = rows[4]['error']
+          assert err['code'] == -32022, err
+          assert err['data']['requested'] == '1900-01-01', err
+          assert '2026-07-28' in err['data']['supported'], err
+
+          assert rows[5]['result']['protocolVersion'] == '2024-11-05', rows[5]
+
+          print('MCP 2026-07-28 conformance smoke test passed (discover, tools, '
+                'UnsupportedProtocolVersionError, legacy initialize).')
+          PY

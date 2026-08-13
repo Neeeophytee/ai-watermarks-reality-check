@@ -1,0 +1,19 @@
+__pycache__/
+*.py[cod]
+.DS_Store
+.venv/
+reports/
+.tools/
+tests/fixtures/signed/
+
+# Internal working documents. These record build history, release process and
+# internal decisions. Users of the pack neither need them nor should rely on
+# them, so they stay local and out of the published repository.
+BUILD-SUMMARY.md
+build-summary.md
+implementation-notes.md
+RELEASE-CHECKLIST.md
+
+# Launch drafts: marketing copy with time-sensitive claims. Kept local so the
+# published repository carries only technical content.
+launch/

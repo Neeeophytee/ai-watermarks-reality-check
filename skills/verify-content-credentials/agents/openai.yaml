@@ -1,0 +1,4 @@
+interface:
+  display_name: "Verify Content Credentials"
+  short_description: "Verify C2PA integrity and signer trust separately"
+  default_prompt: "Use $verify-content-credentials to validate Content Credentials with c2patool and report integrity separately from signer trust."

@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Neeeophytee/ai-watermarks-reality-check/schemas/audit-provenance.json",
+  "title": "audit-provenance output",
+  "type": "object",
+  "required": [
+    "schema_version", "tool", "asset", "asset_sha256", "format", "answers",
+    "unknowns", "evidence", "trust_policy", "privacy_risk", "text_signals",
+    "components", "reason", "limitations"
+  ],
+  "$defs": {
+    "answer": { "type": "string", "enum": ["YES", "NO", "UNKNOWN"] }
+  },
+  "properties": {
+    "schema_version": { "type": "string" },
+    "tool": { "const": "audit-provenance" },
+    "asset": { "type": ["string", "null"] },
+    "asset_sha256": { "oneOf": [{ "$ref": "common.json#/$defs/sha256" }, { "type": "null" }] },
+    "format": { "type": ["string", "null"] },
+    "answers": {
+      "type": "object",
+      "required": ["located", "verified", "trusted", "scan_complete"],
+      "properties": {
+        "located": { "$ref": "#/$defs/answer" },
+        "verified": { "$ref": "#/$defs/answer" },
+        "trusted": { "$ref": "#/$defs/answer" },
+        "scan_complete": { "$ref": "#/$defs/answer" }
+      }
+    },
+    "unknowns": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["question", "why", "next_step"],
+        "properties": {
+          "question": { "type": "string" },
+          "why": { "type": "string" },
+          "next_step": { "type": "string" }
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "required": ["manifest_presence", "integrity", "signer_trust", "markers", "manifest"],
+      "properties": {
+        "manifest_presence": { "$ref": "common.json#/$defs/manifest_presence" },
+        "integrity": { "$ref": "common.json#/$defs/integrity" },
+        "signer_trust": { "$ref": "common.json#/$defs/signer_trust" },
+        "markers": { "type": "array", "items": { "$ref": "common.json#/$defs/c2pa_marker" } },
+        "manifest": { "$ref": "common.json#/$defs/manifest_summary" }
+      }
+    },
+    "trust_policy": { "type": ["string", "null"] },
+    "privacy_risk": {
+      "type": "string",
+      "enum": ["HIGH", "MEDIUM", "LOW", "NONE_OBSERVED", "UNKNOWN"]
+    },
+    "text_signals": { "type": ["object", "null"] },
+    "components": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["skill", "ran", "summary"],
+        "properties": {
+          "skill": { "type": "string" },
+          "ran": { "type": "boolean" },
+          "summary": { "type": "string" },
+          "detail": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "reason": { "type": ["string", "null"] },
+    "limitations": { "type": "array", "items": { "type": "string" } }
+  },
+  "allOf": [
+    {
+      "$comment": "A trusted signer requires a named trust policy.",
+      "if": {
+        "properties": { "answers": { "properties": { "trusted": { "const": "YES" } },
+                                     "required": ["trusted"] } },
+        "required": ["answers"]
+      },
+      "then": { "properties": { "trust_policy": { "type": "string" } } }
+    },
+    {
+      "$comment": "A verified asset must have had its provenance located.",
+      "if": {
+        "properties": { "answers": { "properties": { "verified": { "const": "YES" } },
+                                     "required": ["verified"] } },
+        "required": ["answers"]
+      },
+      "then": {
+        "properties": { "answers": { "properties": { "located": { "const": "YES" } } } }
+      }
+    },
+    {
+      "$comment": "Trust cannot be concluded without successful verification.",
+      "if": {
+        "properties": { "answers": { "properties": { "trusted": { "enum": ["YES", "NO"] } },
+                                     "required": ["trusted"] } },
+        "required": ["answers"]
+      },
+      "then": {
+        "properties": { "evidence": { "properties": { "integrity": { "const": "VALID" } } } }
+      }
+    }
+  ]
+}

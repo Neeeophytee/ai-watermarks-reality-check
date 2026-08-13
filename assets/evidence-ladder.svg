@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">The provenance evidence ladder</title>
+  <desc id="desc">Four progressively stronger stages: observe, verify, trust, and disclose.</desc>
+  <rect width="1200" height="630" fill="#0b1020"/>
+  <circle cx="1080" cy="80" r="190" fill="#715cff" opacity="0.18"/>
+  <circle cx="120" cy="600" r="260" fill="#34d399" opacity="0.12"/>
+  <text x="80" y="90" fill="#f8fafc" font-family="Inter,Arial,sans-serif" font-size="42" font-weight="700">The provenance evidence ladder</text>
+  <text x="80" y="132" fill="#a5b4fc" font-family="Inter,Arial,sans-serif" font-size="22">A marker is a clue. Verification, trust, and disclosure are separate steps.</text>
+  <g font-family="Inter,Arial,sans-serif">
+    <rect x="80" y="190" width="230" height="270" rx="24" fill="#151c32" stroke="#475569"/>
+    <text x="110" y="245" fill="#94a3b8" font-size="18" font-weight="700">01</text>
+    <text x="110" y="292" fill="#f8fafc" font-size="31" font-weight="700">OBSERVE</text>
+    <text x="110" y="340" fill="#cbd5e1" font-size="19">Metadata and</text>
+    <text x="110" y="369" fill="#cbd5e1" font-size="19">container clues</text>
+    <rect x="110" y="405" width="105" height="32" rx="16" fill="#334155"/>
+    <text x="130" y="428" fill="#e2e8f0" font-size="15">POSSIBLE</text>
+    <path d="M325 325h36" stroke="#64748b" stroke-width="4"/>
+    <path d="m351 313 14 12-14 12" fill="none" stroke="#64748b" stroke-width="4"/>
+    <rect x="375" y="190" width="230" height="270" rx="24" fill="#151c32" stroke="#6366f1"/>
+    <text x="405" y="245" fill="#a5b4fc" font-size="18" font-weight="700">02</text>
+    <text x="405" y="292" fill="#f8fafc" font-size="31" font-weight="700">VERIFY</text>
+    <text x="405" y="340" fill="#cbd5e1" font-size="19">Cryptographic</text>
+    <text x="405" y="369" fill="#cbd5e1" font-size="19">asset integrity</text>
+    <rect x="405" y="405" width="82" height="32" rx="16" fill="#3730a3"/>
+    <text x="423" y="428" fill="#e0e7ff" font-size="15">VALID</text>
+    <path d="M620 325h36" stroke="#64748b" stroke-width="4"/>
+    <path d="m646 313 14 12-14 12" fill="none" stroke="#64748b" stroke-width="4"/>
+    <rect x="670" y="190" width="230" height="270" rx="24" fill="#151c32" stroke="#8b5cf6"/>
+    <text x="700" y="245" fill="#c4b5fd" font-size="18" font-weight="700">03</text>
+    <text x="700" y="292" fill="#f8fafc" font-size="31" font-weight="700">TRUST</text>
+    <text x="700" y="340" fill="#cbd5e1" font-size="19">Signer checked against</text>
+    <text x="700" y="369" fill="#cbd5e1" font-size="19">an explicit trust list</text>
+    <rect x="700" y="405" width="98" height="32" rx="16" fill="#5b21b6"/>
+    <text x="718" y="428" fill="#ede9fe" font-size="15">TRUSTED</text>
+    <path d="M915 325h36" stroke="#64748b" stroke-width="4"/>
+    <path d="m941 313 14 12-14 12" fill="none" stroke="#64748b" stroke-width="4"/>
+    <rect x="965" y="190" width="155" height="270" rx="24" fill="#102a28" stroke="#34d399"/>
+    <text x="995" y="245" fill="#6ee7b7" font-size="18" font-weight="700">04</text>
+    <text x="995" y="292" fill="#f8fafc" font-size="27" font-weight="700">DISCLOSE</text>
+    <text x="995" y="340" fill="#cbd5e1" font-size="18">A clear label</text>
+    <text x="995" y="369" fill="#cbd5e1" font-size="18">people can read</text>
+    <rect x="995" y="405" width="90" height="32" rx="16" fill="#065f46"/>
+    <text x="1011" y="428" fill="#d1fae5" font-size="15">VISIBLE</text>
+  </g>
+  <text x="80" y="535" fill="#e2e8f0" font-family="Inter,Arial,sans-serif" font-size="21">Fail closed: unavailable tools and unpublished detectors stay UNKNOWN or UNVERIFIABLE.</text>
+  <text x="80" y="574" fill="#64748b" font-family="Inter,Arial,sans-serif" font-size="17">AI Watermarks Reality Check · Web After AI</text>
+</svg>

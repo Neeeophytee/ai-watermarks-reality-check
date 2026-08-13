@@ -1,0 +1,4 @@
+interface:
+  display_name: "Audit Metadata Privacy"
+  short_description: "Audit privacy metadata without altering provenance"
+  default_prompt: "Use $audit-metadata-privacy to identify privacy-sensitive metadata and recommend safe next steps without mutating the asset."

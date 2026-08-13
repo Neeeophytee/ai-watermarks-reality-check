@@ -1,0 +1,200 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Neeeophytee/ai-watermarks-reality-check/schemas/audit-metadata-privacy.json",
+  "title": "audit-metadata-privacy output",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "tool",
+    "format_supported",
+    "risk",
+    "findings",
+    "values_redacted",
+    "inspected_surfaces",
+    "source_modified",
+    "limits",
+    "limitations",
+    "asset",
+    "asset_sha256",
+    "format",
+    "reason"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "tool": {
+      "const": "audit-metadata-privacy"
+    },
+    "asset": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "asset_sha256": {
+      "oneOf": [
+        {
+          "$ref": "common.json#/$defs/sha256"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "format": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "format_supported": {
+      "type": "boolean"
+    },
+    "risk": {
+      "type": "string",
+      "enum": [
+        "HIGH",
+        "MEDIUM",
+        "LOW",
+        "NONE_OBSERVED",
+        "UNKNOWN"
+      ]
+    },
+    "values_redacted": {
+      "const": true
+    },
+    "source_modified": {
+      "const": false
+    },
+    "inspected_surfaces": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "category",
+          "severity",
+          "location",
+          "method"
+        ],
+        "properties": {
+          "category": {
+            "type": "string",
+            "enum": [
+              "location",
+              "identity",
+              "device",
+              "software",
+              "timeline",
+              "comment"
+            ]
+          },
+          "severity": {
+            "$ref": "common.json#/$defs/severity"
+          },
+          "location": {
+            "type": "string"
+          },
+          "method": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "limits": {
+      "type": "object"
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "reason": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "$comment": "NONE_OBSERVED requires an empty findings list.",
+      "if": {
+        "properties": {
+          "risk": {
+            "const": "NONE_OBSERVED"
+          }
+        },
+        "required": [
+          "risk"
+        ]
+      },
+      "then": {
+        "properties": {
+          "findings": {
+            "maxItems": 0
+          }
+        }
+      }
+    },
+    {
+      "$comment": "HIGH risk requires at least one HIGH finding.",
+      "if": {
+        "properties": {
+          "risk": {
+            "const": "HIGH"
+          }
+        },
+        "required": [
+          "risk"
+        ]
+      },
+      "then": {
+        "properties": {
+          "findings": {
+            "contains": {
+              "properties": {
+                "severity": {
+                  "const": "HIGH"
+                }
+              },
+              "required": [
+                "severity"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "$comment": "An unsupported format cannot yield a privacy conclusion.",
+      "if": {
+        "properties": {
+          "format_supported": {
+            "const": false
+          }
+        },
+        "required": [
+          "format_supported"
+        ]
+      },
+      "then": {
+        "properties": {
+          "risk": {
+            "const": "UNKNOWN"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  ]
+}
