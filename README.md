@@ -34,7 +34,7 @@ There is no universal detector for every proprietary or secret-key watermark. Wh
 | `audit-provenance` | **Start here.** Answer the five questions for one asset in one pass |
 | `inspect-content-provenance` | Locate C2PA structure and hidden text channels without overclaiming |
 | `verify-content-credentials` | Validate a C2PA manifest and report integrity separately from signer trust |
-| `map-provenance-survival` | Compare an original with resized, converted, uploaded, or downloaded derivatives |
+| `map-provenance-survival` | Batch edited copies and create a shareable C2PA survival report |
 | `audit-metadata-privacy` | Inventory GPS, author, device, software, and date metadata without changing the source |
 | `check-ai-transparency` | Check whether evidence and human-readable disclosure are ready for review |
 | `detect-text-watermark` | Run every available text-provenance detector and report what cannot be checked |
@@ -99,8 +99,10 @@ python3 skills/verify-content-credentials/scripts/verify_c2pa.py image.png
 
 python3 skills/map-provenance-survival/scripts/map_survival.py \
   --original original.png \
-  --derivative resized=resized.png \
-  --derivative social-download=downloaded.jpg
+  --derivatives-dir transformed-copies/ \
+  --derivative social-download:platform-roundtrip=downloaded.jpg \
+  --c2patool /path/to/c2patool \
+  --report survival-report.html
 
 python3 skills/audit-metadata-privacy/scripts/audit_metadata.py image.png
 
@@ -111,6 +113,28 @@ python3 skills/detect-text-watermark/scripts/detect_text_watermark.py draft.md
 ```
 
 Scripts emit JSON to stdout and diagnostics to stderr. Remote-manifest fetching is disabled by default and requires `--allow-network`. A missing verifier, an unsupported verifier version, an inaccessible remote manifest, or an unpublished detector produces an explicit unknown state rather than a pass.
+
+Survival reports refuse to overwrite an existing file. They show only filenames
+by default, while the machine-readable JSON retains the full reproducibility
+record. Use `--include-paths` only when the report will stay private. A generated
+report never claims that a proprietary watermark detector ran.
+
+See the [generated example](examples/provenance-survival-example.md) and the
+[community benchmark template](examples/platform-benchmark-template.md) before
+publishing a result.
+
+## What's new in v0.2.0
+
+The provenance survival skill can now audit a directory of edited or downloaded
+copies in one run and create a self-contained Markdown or HTML report. This is
+useful for testing a CMS, editor, CDN, social network, or watermark-removal
+workflow without changing any of the files being measured.
+
+- `--derivatives-dir` recursively adds visible, non-symlink files with stable labels.
+- `--report survival-report.html` creates a portable, script-free report.
+- Local paths and the original command are redacted from reports by default.
+- The JSON result remains on stdout and continues to validate against the published schema.
+- Every report states its boundary: this workflow measures C2PA survival, not proprietary pixel or keyed text watermarks.
 
 ## Evidence model
 

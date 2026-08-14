@@ -630,12 +630,178 @@ class SurvivalTests(unittest.TestCase):
         self.assertEqual(result["derivatives"][0]["survival"], "LOST_OR_UNAVAILABLE")
         self.assertEqual(result["summary"]["lost_or_unavailable"], 1)
 
+    def test_directory_batch_is_recursive_sorted_and_safe(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = pathlib.Path(directory) / "derivatives"
+            (root / "nested").mkdir(parents=True)
+            (root / ".hidden").mkdir()
+            (root / "z.jpg").write_bytes(b"z")
+            (root / "nested" / "a.png").write_bytes(b"a")
+            (root / ".hidden" / "secret.png").write_bytes(b"secret")
+            (root / ".ignored.jpg").write_bytes(b"hidden")
+            try:
+                (root / "outside-link").symlink_to(FIXTURES / "jpeg_clean.jpg")
+            except (OSError, NotImplementedError):
+                pass
+            rows = survival_mod.derivatives_from_directories(
+                FIXTURES / "jpeg_clean.jpg", [root])
+        self.assertEqual([row[0] for row in rows], ["z.jpg", "nested/a.png"])
+        self.assertTrue(all(row[2] is None for row in rows))
+
+    def test_directory_batch_deduplicates_files_and_rejects_labels(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = pathlib.Path(directory)
+            derivative = root / "copy.jpg"
+            derivative.write_bytes(b"copy")
+            rows = survival_mod.derivatives_from_directories(
+                FIXTURES / "jpeg_clean.jpg", [root],
+                existing=[("explicit", derivative, "copy")])
+            self.assertEqual([row[0] for row in rows], ["explicit"])
+            with self.assertRaisesRegex(ValueError, "Duplicate derivative label"):
+                survival_mod.derivatives_from_directories(
+                    FIXTURES / "jpeg_clean.jpg", [],
+                    existing=[("same", derivative, None), ("same", derivative, None)])
+
+    def test_multiple_directories_prefix_labels(self):
+        with tempfile.TemporaryDirectory() as directory:
+            base = pathlib.Path(directory)
+            first = base / "editor"
+            second = base / "cms"
+            first.mkdir()
+            second.mkdir()
+            (first / "image.jpg").write_bytes(b"first")
+            (second / "image.jpg").write_bytes(b"second")
+            rows = survival_mod.derivatives_from_directories(
+                FIXTURES / "jpeg_clean.jpg", [first, second])
+        self.assertEqual([row[0] for row in rows], ["editor/image.jpg", "cms/image.jpg"])
+
+    def test_shareable_reports_redact_paths_and_state_scope(self):
+        result = survival_mod.build(
+            FIXTURES / "jpeg_c2pa_app11.jpg",
+            [("cdn", FIXTURES / "jpeg_clean.jpg", "resize")], None, 5, False)
+        markdown = survival_mod.render_markdown(result)
+        document = survival_mod.render_html(result)
+        self.assertNotIn(str(ROOT), markdown)
+        self.assertNotIn(str(ROOT), document)
+        self.assertIn("jpeg_c2pa_app11.jpg", markdown)
+        self.assertIn("C2PA provenance survival only", markdown)
+        self.assertIn("proprietary pixel", document)
+        self.assertIn("Signer trust was not evaluated", document)
+        self.assertNotIn("<script", document.lower())
+
+    def test_limitations_match_verifier_use(self):
+        unavailable = survival_mod.build(FIXTURES / "jpeg_clean.jpg", [], None, 5, False)
+        self.assertTrue(any("Without c2patool" in item for item in unavailable["limitations"]))
+        verified = dict(unavailable)
+        verified["limitations"] = survival_mod._limitations(True)
+        self.assertFalse(any("Without c2patool" in item for item in verified["limitations"]))
+        self.assertTrue(any("signer trust" in item for item in verified["limitations"]))
+
+    def test_report_renderers_escape_caller_supplied_labels(self):
+        result = survival_mod.build(
+            FIXTURES / "jpeg_c2pa_app11.jpg",
+            [("safe", FIXTURES / "jpeg_clean.jpg", None)], None, 5, False)
+        result["derivatives"][0]["label"] = "<script>alert(1)</script>|x"
+        document = survival_mod.render_html(result)
+        markdown = survival_mod.render_markdown(result)
+        self.assertNotIn("<script>", document)
+        self.assertIn("&lt;script&gt;", document)
+        self.assertIn("\\|x", markdown)
+
+    def test_report_writer_never_overwrites(self):
+        result = survival_mod.build(FIXTURES / "jpeg_clean.jpg", [], None, 5, False)
+        with tempfile.TemporaryDirectory() as directory:
+            report = pathlib.Path(directory) / "report.md"
+            report.write_text("keep me", encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "Refusing to overwrite"):
+                survival_mod.write_report(report, result)
+            self.assertEqual(report.read_text(encoding="utf-8"), "keep me")
+
+    def test_cli_writes_report_and_keeps_json_contract(self):
+        with tempfile.TemporaryDirectory() as directory:
+            derivatives = pathlib.Path(directory) / "derivatives"
+            derivatives.mkdir()
+            shutil.copyfile(FIXTURES / "jpeg_clean.jpg", derivatives / "clean.jpg")
+            report = derivatives / "survival.html"
+            completed = subprocess.run([
+                sys.executable,
+                str(ROOT / "skills/map-provenance-survival/scripts/map_survival.py"),
+                "--original", str(FIXTURES / "jpeg_c2pa_app11.jpg"),
+                "--derivatives-dir", str(derivatives),
+                "--report", str(report),
+            ], check=False, capture_output=True, text=True)
+            payload = json.loads(completed.stdout)
+            self.assertEqual(completed.returncode, core.EXIT_CONCLUSIVE_BAD)
+            self.assertTrue(report.is_file())
+            self.assertEqual(payload["summary"]["derivative_count"], 1)
+            self.assertEqual(
+                validate_schema.validate_document(payload, "map-provenance-survival.json"), [])
+
+    def test_cli_report_failure_is_structured_and_inconclusive(self):
+        with tempfile.TemporaryDirectory() as directory:
+            report = pathlib.Path(directory) / "existing.md"
+            report.write_text("keep", encoding="utf-8")
+            completed = subprocess.run([
+                sys.executable,
+                str(ROOT / "skills/map-provenance-survival/scripts/map_survival.py"),
+                "--original", str(FIXTURES / "jpeg_clean.jpg"),
+                "--report", str(report),
+            ], check=False, capture_output=True, text=True)
+            payload = json.loads(completed.stdout)
+            retained = report.read_text(encoding="utf-8")
+        self.assertEqual(completed.returncode, core.EXIT_INCONCLUSIVE)
+        self.assertIn("Refusing to overwrite", payload["reason"])
+        self.assertEqual(retained, "keep")
+        self.assertEqual(
+            validate_schema.validate_document(payload, "map-provenance-survival.json"), [])
+
+    def test_missing_directory_is_structured_and_inconclusive(self):
+        completed = subprocess.run([
+            sys.executable,
+            str(ROOT / "skills/map-provenance-survival/scripts/map_survival.py"),
+            "--original", str(FIXTURES / "jpeg_clean.jpg"),
+            "--derivatives-dir", "/definitely/missing/derivatives",
+        ], check=False, capture_output=True, text=True)
+        payload = json.loads(completed.stdout)
+        self.assertEqual(completed.returncode, core.EXIT_INCONCLUSIVE)
+        self.assertTrue(payload["reason"])
+        self.assertEqual(
+            validate_schema.validate_document(payload, "map-provenance-survival.json"), [])
+
+    def test_mcp_accepts_derivative_directories(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = pathlib.Path(directory)
+            shutil.copyfile(FIXTURES / "jpeg_clean.jpg", root / "clean.jpg")
+            payload = mcp_server.call_tool("map_provenance_survival", {
+                "original": str(FIXTURES / "jpeg_c2pa_app11.jpg"),
+                "derivative_directories": [str(root)],
+            })
+        self.assertEqual(payload["summary"]["derivative_count"], 1)
+        self.assertEqual(payload["derivatives"][0]["label"], "clean.jpg")
+        self.assertEqual(
+            validate_schema.validate_document(payload, "map-provenance-survival.json"), [])
+
 
 # ---------------------------------------------------------------------------
 # Exit-code contract and schemas
 # ---------------------------------------------------------------------------
 
 class ContractTests(unittest.TestCase):
+    def test_release_version_is_consistent(self):
+        version = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
+        self.assertEqual(version, "0.2.0")
+        self.assertEqual(mcp_server.SERVER_INFO["version"], version)
+        self.assertEqual(survival_mod.TOOL_VERSION, version)
+        self.assertIn("## [{0}]".format(version),
+                      (ROOT / "CHANGELOG.md").read_text(encoding="utf-8"))
+        completed = subprocess.run([
+            sys.executable,
+            str(ROOT / "skills/map-provenance-survival/scripts/map_survival.py"),
+            "--version",
+        ], check=False, capture_output=True, text=True)
+        self.assertEqual(completed.returncode, 0)
+        self.assertIn(version, completed.stdout)
+
     def test_exit_codes_are_the_documented_constants(self):
         self.assertEqual((core.EXIT_CONCLUSIVE_GOOD, core.EXIT_CONCLUSIVE_BAD,
                           core.EXIT_INCONCLUSIVE), (0, 1, 2))

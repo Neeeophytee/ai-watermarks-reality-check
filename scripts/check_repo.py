@@ -48,6 +48,13 @@ def frontmatter(text: str) -> dict:
 
 def main() -> int:
     errors = []
+    version_file = ROOT / "VERSION"
+    version = version_file.read_text(encoding="utf-8").strip() if version_file.exists() else ""
+    if not re.fullmatch(r"\d+\.\d+\.\d+", version):
+        errors.append("VERSION must contain a semantic version such as 0.2.0")
+    changelog_text = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    if version and "## [{0}]".format(version) not in changelog_text:
+        errors.append("CHANGELOG.md has no section for VERSION {0}".format(version))
     skill_dirs = sorted(path for path in SKILLS.iterdir() if path.is_dir())
     names = {path.name for path in skill_dirs}
     if names != EXPECTED_SKILLS:
@@ -141,6 +148,10 @@ def main() -> int:
         spec = importlib.util.spec_from_file_location("mcp_server_check", ROOT / "mcp" / "server.py")
         server = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(server)
+        if server.SERVER_INFO.get("version") != version:
+            errors.append("MCP server version does not match VERSION")
+        if server.module("survival").TOOL_VERSION != version:
+            errors.append("map-provenance-survival version does not match VERSION")
         exposed = {tool["name"] for tool in server.TOOLS}
         expected = {name.replace("-", "_") for name in EXPECTED_SKILLS}
         if exposed != expected:

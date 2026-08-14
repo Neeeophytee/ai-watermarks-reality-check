@@ -3,7 +3,24 @@
 All notable changes to this project are documented here.
 This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.0] — unreleased
+## [0.2.0] - 2026-08-14
+
+### Added
+
+- Recursive directory batching for provenance-survival tests, with stable relative labels, explicit deduplication, and no symlink traversal.
+- Self-contained, script-free HTML reports and portable Markdown reports.
+- Path-redacted shareable views that retain full-file hashes, verifier details, evidence states, reproducibility notes, and limitations.
+- MCP directory batching through the same `map_provenance_survival` result contract.
+- A repository `VERSION` file and `map_survival.py --version` release identifier.
+- Report safety tests for escaping, path privacy, overwrite refusal, JSON schema parity, and CLI/MCP behavior.
+
+### Clarified
+
+- Survival reports evaluate C2PA evidence only. They do not imply that proprietary pixel, audio, video, or keyed text watermark detectors ran.
+- `VALID` remains an integrity result; signer trust is not evaluated by the survival workflow.
+- Directory discovery is workflow convenience, not proof of how any derivative was produced.
+
+## [0.1.0] - 2026-08-13
 
 First public release candidate. Nothing has been published before this, so the
 entries below describe the state at launch rather than a delta for users.

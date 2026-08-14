@@ -1,4 +1,4 @@
 interface:
   display_name: "Map Provenance Survival"
-  short_description: "Test whether provenance survives publishing workflows"
-  default_prompt: "Use $map-provenance-survival to compare an original with transformed outputs and build a provenance survival matrix."
+  short_description: "Create a shareable provenance survival report"
+  default_prompt: "Use $map-provenance-survival to compare an original with transformed outputs and build a path-redacted provenance survival report."

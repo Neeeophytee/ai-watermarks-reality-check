@@ -46,7 +46,7 @@ LEGACY_VERSIONS = ["2025-11-25", "2025-06-18", "2025-03-26", "2024-11-05"]
 # revisions are negotiated exclusively through `initialize`.
 SUPPORTED_VERSIONS = [PROTOCOL_VERSION]
 
-SERVER_INFO = {"name": "ai-watermarks-reality-check", "version": "0.1.0"}
+SERVER_INFO = {"name": "ai-watermarks-reality-check", "version": "0.2.0"}
 
 META_VERSION_KEY = "io.modelcontextprotocol/protocolVersion"
 META_CLIENT_CAPS_KEY = "io.modelcontextprotocol/clientCapabilities"
@@ -248,6 +248,14 @@ TOOLS = [
                     "items": {"type": "string"},
                     "description": "Entries shaped LABEL=PATH",
                 },
+                "derivative_directories": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": (
+                        "Directories whose visible, non-symlink files are added recursively "
+                        "with deterministic relative labels"
+                    ),
+                },
                 "c2patool": {"type": "string"},
                 "allow_network": {"type": "boolean", "default": False},
             },
@@ -354,7 +362,12 @@ def call_tool(name: str, arguments: dict) -> dict:
 
     if name == "map_provenance_survival":
         mod = module("survival")
-        derivatives = [mod.parse_derivative(item) for item in arguments.get("derivatives", [])]
+        explicit = [mod.parse_derivative(item) for item in arguments.get("derivatives", [])]
+        derivatives = mod.derivatives_from_directories(
+            pathlib.Path(arguments["original"]),
+            [pathlib.Path(path) for path in arguments.get("derivative_directories", [])],
+            existing=explicit,
+        )
         return mod.build(
             pathlib.Path(arguments["original"]),
             derivatives,

@@ -20,3 +20,16 @@
 - `UNKNOWN`: tooling or input prevented a reliable comparison.
 
 Do not assign intent. A platform may remove metadata through ordinary transcoding, optimization, privacy policy, or unsupported formats.
+
+## Batch and report boundaries
+
+`--derivatives-dir` is a convenience for collecting outputs, not evidence about
+how they were produced. The relative filename becomes the label and the
+operation remains unset unless the caller supplied it explicitly with
+`--derivative LABEL:OPERATION=PATH`.
+
+The HTML and Markdown views contain the same observations as JSON. They redact
+absolute paths by default, never overwrite an existing report, and state that
+only C2PA provenance survival was evaluated. Signer trust and proprietary
+watermark channels require their own tools and must not be inferred from this
+matrix.
