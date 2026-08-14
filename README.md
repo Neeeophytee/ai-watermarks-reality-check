@@ -19,6 +19,14 @@ This pack gives teams a reproducible workflow:
 inspect → verify → transform-test → privacy-audit → disclosure-check
 ```
 
+## See it in action
+
+[![C2PA provenance survival report showing a valid original and two derivatives with no manifest found](media/watermark-two-sides-report.gif)](media/watermark-two-sides-34s-1080p.mp4)
+
+The signed original reports `PRESENT`, `VALID`, and `PRESERVED_VALID`. The downloaded and post-tool copies report `ABSENT`, `NOT_VERIFIED`, and `LOST_OR_UNAVAILABLE`. This comparison covers the C2PA provenance layer. It does not test proprietary pixel watermarks or keyed text watermarks.
+
+[Watch the 34-second landscape demo](media/watermark-two-sides-34s-1080p.mp4) or [open the vertical social cut](media/watermark-two-sides-vertical.mp4).
+
 ## Agent and model compatibility
 
 The skills work with [Claude Code](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview), [Codex](https://learn.chatgpt.com/docs/build-skills), [Gemini CLI](https://codelabs.developers.google.com/gemini-cli/how-to-create-agent-skills-for-gemini-cli), and other Agent Skills-compatible tools.
